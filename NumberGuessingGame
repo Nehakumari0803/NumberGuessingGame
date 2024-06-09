@@ -1,0 +1,109 @@
+import javax.swing.JOptionPane;
+import javax.swing.UIManager;
+
+public class GameNumber{
+
+    public static void main(String[] args) {
+        // Customize dialog box appearance
+        UIManager.put("OptionPane.background", new javax.swing.plaf.ColorUIResource(0, 0, 255)); // Blue background
+        UIManager.put("Panel.background", new javax.swing.plaf.ColorUIResource(0, 0, 255)); // Blue background for the panel
+        UIManager.put("OptionPane.messageForeground", new javax.swing.plaf.ColorUIResource(255, 255, 255)); // White text
+        UIManager.put("OptionPane.messageFont", UIManager.getFont("Label.font").deriveFont(16f)); // Increase font size
+
+        int minRange = 1;
+        int maxRange = 100;
+        int attempts = 5; // Number of attempts allowed
+        int score = 0; // Initialize score
+
+        while (true) {
+            // Display welcome message
+            JOptionPane.showMessageDialog(null, "Welcome to the Number Guessing Game!", "Game Start", JOptionPane.PLAIN_MESSAGE);
+
+            // Generate random number for the round
+            int randomNumber = generateRandomNumber(minRange, maxRange);
+
+            // Play the round and update score
+            RoundResult roundResult = playRound(randomNumber, attempts);
+            score += roundResult.score;
+
+            // If attempts are exhausted, display the correct number and score
+            if (roundResult.attempts == 0) {
+                JOptionPane.showMessageDialog(null, "Out of attempts! The correct number was: " + randomNumber + "\nYour score for this round is: " + roundResult.score + "\nYour total score is: " + score, "Game Over", JOptionPane.ERROR_MESSAGE);
+            }
+
+            // Ask if the user wants to play again
+            int playAgain = JOptionPane.showConfirmDialog(null, "Do you want to play again?", "Play Again", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+
+            // Check if the user wants to play again
+            if (playAgain != JOptionPane.YES_OPTION) {
+                JOptionPane.showMessageDialog(null, "Thanks for playing!", "Game Over", JOptionPane.PLAIN_MESSAGE);
+                break;
+            }
+        }
+    }
+
+    private static int generateRandomNumber(int min, int max) {
+        return (int) (Math.random() * (max - min + 1) + min);
+    }
+
+    private static RoundResult playRound(int randomNumber, int attempts) {
+        int roundScore = 0;
+        int guessedNumber = 0;
+        boolean guessedCorrectly = false;
+
+        // Loop until no attempts left
+        while (attempts > 0 && !guessedCorrectly) {
+            // Ask for user's guess
+            String guessInput = JOptionPane.showInputDialog(null, "Guess the number between 1 and 100. Attempts left: " + attempts, "Your Guess", JOptionPane.QUESTION_MESSAGE);
+
+            // Check if user cancels the game
+            if (guessInput == null) {
+                JOptionPane.showMessageDialog(null, "Game cancelled.", "Game Cancelled", JOptionPane.PLAIN_MESSAGE);
+                return new RoundResult(guessedNumber, roundScore, 0);
+            }
+
+            // Convert user's guess to integer
+            int guess;
+            try {
+                guess = Integer.parseInt(guessInput);
+                if (guess < 1 || guess > 100) {
+                    JOptionPane.showMessageDialog(null, "Please enter a number between 1 and 100.", "Invalid Input", JOptionPane.WARNING_MESSAGE);
+                    continue;
+                }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Please enter a valid number.", "Invalid Input", JOptionPane.WARNING_MESSAGE);
+                continue;
+            }
+            guessedNumber = guess;
+
+            // Check user's guess against the random number
+            if (guess == randomNumber) {
+                JOptionPane.showMessageDialog(null, "Congratulations! You guessed the correct number.", "Correct Guess", JOptionPane.INFORMATION_MESSAGE);
+                roundScore = attempts;
+                guessedCorrectly = true;
+            } else if (guess < randomNumber) {
+                JOptionPane.showMessageDialog(null, "Too low! Try again.", "Try Again", JOptionPane.WARNING_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null, "Too high! Try again.", "Try Again", JOptionPane.WARNING_MESSAGE);
+            }
+
+            // Decrease number of attempts
+            attempts--;
+        }
+
+        return new RoundResult(guessedNumber, roundScore, attempts);
+    }
+
+    // Class to store round result
+    private static class RoundResult {
+        int guessedNumber;
+        int score;
+        int attempts;
+
+        RoundResult(int guessedNumber, int score, int attempts) {
+            this.guessedNumber = guessedNumber;
+            this.score = score;
+            this.attempts = attempts;
+        }
+    }
+}
